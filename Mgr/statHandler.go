@@ -111,6 +111,8 @@ func showStats(playerId int, squadMember Result) {
 		fmt.Println("Error opening write file: ", err)
 	}
 
+	file.WriteString("------------------------------------------------------\n")
+	fmt.Println("------------------------------------------------------")
 	fmt.Println(squad[playerId], " stat's")
 	file.WriteString(squad[playerId] + " stat's" + "\n\n")
 	for _, legend := range squadMember.Legends {
@@ -128,7 +130,7 @@ func showStats(playerId int, squadMember Result) {
 
 		fmt.Println()
 	}
-	fmt.Println()
+	fmt.Println("------------------------------------------------------")
 	file.WriteString("------------------------------------------------------\n")
 
 	err = file.Close()
