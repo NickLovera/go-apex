@@ -60,7 +60,7 @@ type Headshot struct {
 	Value        float32 `json:"value"`
 }
 
-var squad = [5]string{"HK_Dingledorf", "Its_SkeetR", "MoneyManRex937", "Sourmonkeyy", "Mr__Briteside"}
+var squad = [5]string{"HK_Dingledorf", "Its_SkeetR", "MoneyManRex937", "SourMonkeyy", "Mr__Briteside"}
 
 func GetStats() [5]Result {
 	var squadStats [5]Result
@@ -106,7 +106,7 @@ func GetEveryone(squadStats [5]Result) {
 }
 
 func showStats(playerId int, squadMember Result) {
-	file, err := os.Create("C:\\Users\\nickl\\IdeaProjects\\go-apex\\Data\\" + squad[playerId])
+	file, err := os.Create("/workspace/go-apex/Data/" + squad[playerId])
 	if err != nil {
 		fmt.Println("Error opening write file: ", err)
 	}
