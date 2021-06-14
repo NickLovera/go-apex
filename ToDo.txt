@@ -11,7 +11,9 @@ To Do
 					- Stats
 					
     - Use the files being written too?
-		
+
+	- IS there a way that runs a timer in the background and updates stats without someone having to do it themselves
+
 	- Look into POST API's for transfering to githubpage
 	
 	- TRansfer to Github 

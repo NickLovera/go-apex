@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -42,26 +43,29 @@ type Stat struct {
 
 //Kills
 type Kills struct {
-	Rank  float32 `json:"rank"`
-	Value string  `json:"displayValue"`
+	Rank         float32 `json:"rank"`
+	DisplayValue string  `json:"displayValue"`
+	Value        float32 `json:"value"`
 }
 
 type Damage struct {
-	Rank  float32 `json:"rank"`
-	Value string  `json:"displayValue"`
+	Rank         float32 `json:"rank"`
+	DisplayValue string  `json:"displayValue"`
+	Value        float32 `json:"value"`
 }
 
 type Headshot struct {
-	Rank  float32 `json:"rank"`
-	Value string  `json:"displayValue"`
+	Rank         float32 `json:"rank"`
+	DisplayValue string  `json:"displayValue"`
+	Value        float32 `json:"value"`
 }
 
-var squad = [4]string{"HK_Dingledorf", "Its_SkeetR", "MoneyManRex937", "Sourmonkeyy"}
+var squad = [5]string{"HK_Dingledorf", "Its_SkeetR", "MoneyManRex937", "Sourmonkeyy", "Mr__Briteside"}
 
-func GetStats() [4]Result {
-	var squadStats [4]Result
+func GetStats() [5]Result {
+	var squadStats [5]Result
 
-	for i := 0; i < 4; i++ {
+	for i := 0; i < 5; i++ {
 		req, err := http.NewRequest("GET", "https://public-api.tracker.gg/v2/apex/standard/profile/psn/"+squad[i]+"/segments/legend", nil)
 		if err != nil {
 			fmt.Println(err)
@@ -93,33 +97,34 @@ func GetStats() [4]Result {
 	return squadStats
 }
 
-//Get all stats of everyone
-func GetEveryone(squadStats [4]Result) {
+//GetEveryone Get all stats of everyone
+func GetEveryone(squadStats [5]Result) {
 
-	for i, item := range squadStats {
-		showStats(i, item)
+	for playerId, squadMember := range squadStats {
+		showStats(playerId, squadMember)
 	}
 }
 
-func showStats(playerId int, item Result) {
+func showStats(playerId int, squadMember Result) {
 	file, err := os.Create("C:\\Users\\nickl\\IdeaProjects\\go-apex\\Data\\" + squad[playerId])
 	if err != nil {
 		fmt.Println("Error opening write file: ", err)
 	}
+
 	fmt.Println(squad[playerId], " stat's")
 	file.WriteString(squad[playerId] + " stat's" + "\n\n")
-	for _, each := range item.Legends {
-		fmt.Println("Legend: ", each.Metas.Name)
-		file.WriteString("Legend: " + each.Metas.Name + "\n")
+	for _, legend := range squadMember.Legends {
+		fmt.Println("Legend: ", legend.Metas.Name)
+		file.WriteString("Legend: " + legend.Metas.Name + "\n")
 
-		fmt.Println("Kills: ", each.Stats.KillNum.Value, " Rank: ", each.Stats.KillNum.Rank)
-		file.WriteString("Kills: " + each.Stats.KillNum.Value + " Rank: " + fmt.Sprintf("%g", each.Stats.KillNum.Rank) + "\n")
+		fmt.Println("Kills: ", legend.Stats.KillNum.DisplayValue, " Rank: ", legend.Stats.KillNum.Rank)
+		file.WriteString("Kills: " + legend.Stats.KillNum.DisplayValue + " Rank: " + fmt.Sprintf("%g", legend.Stats.KillNum.Rank) + "\n")
 
-		fmt.Println("Damage: ", each.Stats.Damages.Value, " Rank: ", each.Stats.Damages.Rank)
-		file.WriteString("Damage: " + each.Stats.Damages.Value + " Rank: " + fmt.Sprintf("%g", each.Stats.Damages.Rank) + "\n")
+		fmt.Println("Damage: ", legend.Stats.Damages.DisplayValue, " Rank: ", legend.Stats.Damages.Rank)
+		file.WriteString("Damage: " + legend.Stats.Damages.DisplayValue + " Rank: " + fmt.Sprintf("%g", legend.Stats.Damages.Rank) + "\n")
 
-		fmt.Println("Headshots: ", each.Stats.Headshots.Value, " Rank: "+fmt.Sprintf("%g", each.Stats.Headshots.Rank))
-		file.WriteString("Headshots: " + each.Stats.Headshots.Value + " Rank: " + fmt.Sprintf("%g", each.Stats.Headshots.Rank) + "\n\n")
+		fmt.Println("Headshots: ", legend.Stats.Headshots.DisplayValue, " Rank: "+fmt.Sprintf("%g", legend.Stats.Headshots.Rank))
+		file.WriteString("Headshots: " + legend.Stats.Headshots.DisplayValue + " Rank: " + fmt.Sprintf("%g", legend.Stats.Headshots.Rank) + "\n\n")
 
 		fmt.Println()
 	}
@@ -133,7 +138,7 @@ func showStats(playerId int, item Result) {
 }
 
 //Get one person's stats
-func GetIndivdual(squadStats [4]Result, playerId int) {
+func GetIndivdual(squadStats [5]Result, playerId int) {
 	showStats(playerId-1, squadStats[playerId-1])
 }
 
@@ -146,4 +151,65 @@ func GetTimeTillUpdate(lastUpdate time.Time) (int, int) {
 	seconds := total % 60
 
 	return minutes, seconds
+}
+
+func GetTimeTillContestEnd() (int, int, int) {
+	endTime := GetEndTime()
+	currentTime := time.Now()
+	difference := endTime.Sub(currentTime)
+
+	total := int(difference.Seconds())
+	days := int(total / (60 * 60 * 24))
+	hours := int(total / (60 * 60) % 24)
+	minutes := int(total/60) % 60
+
+	return days, hours, minutes
+}
+
+func GetContestLeaderboard(squadStats [5]Result) [5]string {
+
+	var unsortedBoard [5][2]int
+
+	for playerId, squadMember := range squadStats {
+		unsortedBoard[playerId][0] = playerId
+		for _, legend := range squadMember.Legends {
+			unsortedBoard[playerId][1] += int(legend.Stats.KillNum.Value)
+		}
+		unsortedBoard[playerId][1] -= GetStartingStats()[playerId]
+	}
+	sortedBoard := sortBoard(unsortedBoard)
+	leaderBoard := createLeaderBoard(sortedBoard)
+	return leaderBoard
+}
+
+func sortBoard(unsortedBoard [5][2]int) [5][2]int {
+	for i := 0; i < len(unsortedBoard)-1; i++ {
+		for i := 0; i < len(unsortedBoard)-1; i++ {
+			if unsortedBoard[i][1] < unsortedBoard[i+1][1] {
+				temp := unsortedBoard[i]
+				unsortedBoard[i] = unsortedBoard[i+1]
+				unsortedBoard[i+1] = temp
+			}
+		}
+	}
+	return unsortedBoard
+}
+
+func createLeaderBoard(sortedBoard [5][2]int) [5]string {
+	var leaderBoard [5]string
+	for i := 0; i < 5; i++ {
+		switch i {
+		case 0:
+			leaderBoard[i] = "1st: " + squad[sortedBoard[i][0]] + " Kills: " + strconv.Itoa(sortedBoard[i][1])
+		case 1:
+			leaderBoard[i] = "2nd: " + squad[sortedBoard[i][0]] + " Kills: " + strconv.Itoa(sortedBoard[i][1])
+		case 2:
+			leaderBoard[i] = "3rd: " + squad[sortedBoard[i][0]] + " Kills: " + strconv.Itoa(sortedBoard[i][1])
+		case 3:
+			leaderBoard[i] = "4th: " + squad[sortedBoard[i][0]] + " Kills: " + strconv.Itoa(sortedBoard[i][1])
+		case 4:
+			leaderBoard[i] = "5th: " + squad[sortedBoard[i][0]] + " Kills: " + strconv.Itoa(sortedBoard[i][1])
+		}
+	}
+	return leaderBoard
 }

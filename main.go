@@ -26,10 +26,12 @@ func main() {
 		case 1:
 			getEveryone()
 		case 2:
-			fmt.Println("Who would you like to view?\n" +
-				"1. Hk_Dingledorf\n2. Its_SkeetR\n3. MoneyManRex937\n4. SourMonkeyy")
+			menu.PrintNames()
 			playerId := menu.GetChoice()
 			getIndiv(playerId)
+		case 3:
+			leaderBoard := getLeaderBord()
+			menu.PrintContest(leaderBoard)
 		}
 	}
 }
@@ -40,4 +42,8 @@ func getEveryone() {
 
 func getIndiv(playerId int) {
 	logic.GetIndivdual(squadStats, playerId)
+}
+
+func getLeaderBord() [5]string {
+	return logic.GetContestLeaderboard(squadStats)
 }
