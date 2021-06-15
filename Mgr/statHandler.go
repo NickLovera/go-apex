@@ -38,7 +38,7 @@ type MetaData struct {
 type Stat struct {
 	KillNum   Kills    `json:"kills"`
 	Damages   Damage   `json:"damage"`
-	Headshots Headshot `json:"headshot"`
+	Headshots Headshot `json:"headshots"`
 }
 
 //Kills
