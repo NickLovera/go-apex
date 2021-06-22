@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 )
 
@@ -153,65 +152,4 @@ func GetTimeTillUpdate(lastUpdate time.Time) (int, int) {
 	seconds := total % 60
 
 	return minutes, seconds
-}
-
-func GetTimeTillContestEnd() (int, int, int) {
-	endTime := GetEndTime()
-	currentTime := time.Now()
-	difference := endTime.Sub(currentTime)
-
-	total := int(difference.Seconds())
-	days := int(total / (60 * 60 * 24))
-	hours := int(total / (60 * 60) % 24)
-	minutes := int(total/60) % 60
-
-	return days, hours, minutes
-}
-
-func GetContestLeaderboard(squadStats [5]Result) [5]string {
-
-	var unsortedBoard [5][2]int
-
-	for playerId, squadMember := range squadStats {
-		unsortedBoard[playerId][0] = playerId
-		for _, legend := range squadMember.Legends {
-			unsortedBoard[playerId][1] += int(legend.Stats.KillNum.Value)
-		}
-		unsortedBoard[playerId][1] -= GetStartingStats()[playerId]
-	}
-	sortedBoard := sortBoard(unsortedBoard)
-	leaderBoard := createLeaderBoard(sortedBoard)
-	return leaderBoard
-}
-
-func sortBoard(unsortedBoard [5][2]int) [5][2]int {
-	for i := 0; i < len(unsortedBoard)-1; i++ {
-		for i := 0; i < len(unsortedBoard)-1; i++ {
-			if unsortedBoard[i][1] < unsortedBoard[i+1][1] {
-				temp := unsortedBoard[i]
-				unsortedBoard[i] = unsortedBoard[i+1]
-				unsortedBoard[i+1] = temp
-			}
-		}
-	}
-	return unsortedBoard
-}
-
-func createLeaderBoard(sortedBoard [5][2]int) [5]string {
-	var leaderBoard [5]string
-	for i := 0; i < 5; i++ {
-		switch i {
-		case 0:
-			leaderBoard[i] = "1st: " + squad[sortedBoard[i][0]] + " Kills: " + strconv.Itoa(sortedBoard[i][1])
-		case 1:
-			leaderBoard[i] = "2nd: " + squad[sortedBoard[i][0]] + " Kills: " + strconv.Itoa(sortedBoard[i][1])
-		case 2:
-			leaderBoard[i] = "3rd: " + squad[sortedBoard[i][0]] + " Kills: " + strconv.Itoa(sortedBoard[i][1])
-		case 3:
-			leaderBoard[i] = "4th: " + squad[sortedBoard[i][0]] + " Kills: " + strconv.Itoa(sortedBoard[i][1])
-		case 4:
-			leaderBoard[i] = "5th: " + squad[sortedBoard[i][0]] + " Kills: " + strconv.Itoa(sortedBoard[i][1])
-		}
-	}
-	return leaderBoard
 }
