@@ -9,7 +9,7 @@ import (
 //Chnage these values to the total starting count for any stat
 //"HK_Dingledorf", "Its_SkeetR", "MoneyManRex937", "SourMonkeyy", "Mr__Briteside"
 func GetStartingStats() [5]int {
-	return [5]int{9759658, 1508048, 6251766, 2673304, 1564391}
+	return [5]int{9759658, 1510048, 6251766, 2673304, 1564391}
 }
 
 func GetEndTime() time.Time {
